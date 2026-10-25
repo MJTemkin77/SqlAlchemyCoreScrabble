@@ -358,7 +358,7 @@ def main():
                       row[c.losername], ",",
                       row[c.loserscore])
 
-                ans = input("Want a rematch")
+                ans = input("Want a rematch:")
                 if ans == "Y":
                     statement = insert(matches).values(PlayerA_Id=row[c.winnerSysId], PlayerB_Id=row[c.loserSysId])
                     #statement = text("Insert into matches (PlayerA_Id, PlayerB_Id) values (:playerA, :playerB)")
