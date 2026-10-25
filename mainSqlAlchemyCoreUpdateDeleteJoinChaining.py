@@ -186,8 +186,10 @@ def main():
         Column("ID", Integer, primary_key=True, autoincrement=True),
         Column("FullName", String(50), nullable=False),
         Column("origId", Integer, nullable=False),
+        # NEW.3 Dependency - Add FirstName and LastName to the Person table in your ScrabbleDb database.
         Column("FirstName", String(50), nullable=False),
         Column("LastName", String(50), nullable=False),
+        # END OF NEW.3 Dependency.
         mysql_engine="InnoDB",
         mysql_charset="utf8mb4",
         mysql_collate="utf8mb4_uca1400_ai_ci",
@@ -199,6 +201,7 @@ def main():
     # Split the FullName and update the Last and First Name fields
     #########################  NEW  ##################################
     # Which rows will be updated (in this case all)
+    # See: https://docs.sqlalchemy.org/en/21/tutorial/data_update.html#the-update-sql-expression-construct
     updateStatement = update(persons).values(
         # See: https://mariadb.com/docs/server/reference/sql-functions/string-functions/substring_index
         # func allows SQLAlchemy to call SQL functions see: https://docs.sqlalchemy.org/en/20/tutorial/data_select.html#working-with-sql-functions
@@ -212,6 +215,7 @@ def main():
     # STEP NEW.4
     # Delete a scrabble_initial_games record
     # Delete the records where the winnernewrating has a score less than or equal to 400
+    # See: https://docs.sqlalchemy.org/en/21/tutorial/data_update.html#the-update-sql-expression-construct
     minDelete = 400
     deleteStatement = delete(scrabble_games_initial).where(scrabble_games_initial.c.winnernewrating <= minDelete)
     print(deleteStatement)
@@ -232,7 +236,7 @@ def main():
     # Limit the data to the top 10 teams for TourneyID = 9760. Since teams have three players (it seems)
     # the limit is set to 30
     # The distinct keyword is used so that the top thirty unique players are listed. Otherwise we see the same person many times.
-
+    # See: https://docs.sqlalchemy.org/en/21/tutorial/data_update.html#the-update-sql-expression-construct
     TourneyID = 9760
     NumTeams = 10
     MembersPerTeam = 3
@@ -240,7 +244,6 @@ def main():
     joinStatement = (select(scrabble_games_initial.c.tourneyid,
                             scrabble_games_initial.c.winnerpos,
                             persons.c.FirstName, persons.c.LastName).
-                     select_from(scrabble_games_initial).
                      join(persons, scrabble_games_initial.c.winnerSysId == persons.c.ID).
                      where(scrabble_games_initial.c.tourneyid == TourneyID).
                      distinct().
