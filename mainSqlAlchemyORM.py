@@ -54,7 +54,7 @@ import configparser
 #     import getpass                ->  getpass.getpass("Password: ")
 from sqlalchemy import create_engine, text, TextClause
 from sqlalchemy.engine import URL
-from sqlalchemy.exc import OperationalError, ProgrammingError
+from sqlalchemy.exc import OperationalError, ProgrammingError, SQLAlchemyError
 
 #########################  NEW  ##################################
 # STEP NEW.1
@@ -375,6 +375,14 @@ def main():
     except ProgrammingError as e:
         # Connected, but the SQL was rejected: misspelled table or column name, etc.
         print(f"SQL error: {e}")
+    ######################################## NEW ##############################
+    # X. Catching all other SQLAlchemy errors
+    except SQLAlchemyError as e:
+        print(f"SQLAlchemy error: {e}")
+    ######################################## NEW ##############################
+    # X. Catching all other Python errors
+    except Exception as e:
+        print(f"Unexpected non-SQLAlchemy error: {e}")
 
     print("End database connection test")
 
