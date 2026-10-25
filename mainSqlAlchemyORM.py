@@ -1,6 +1,6 @@
 """
 Connecting a Python application to a database with SQLAlchemy.
-
+This is a trivial change for Git.
 The examples use MariaDB.
 
 Every application that talks to a database must:
