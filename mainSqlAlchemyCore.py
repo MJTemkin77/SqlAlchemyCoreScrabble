@@ -60,7 +60,7 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 # STEP NEW.1
 ## NEW IMPORTS for SQLAlchemy Core
 from sqlalchemy import Table, Column, Integer, String, CHAR, MetaData
-from sqlalchemy import select
+from sqlalchemy import select, insert
 
 
 #########################  NEW  ##################################
@@ -165,6 +165,16 @@ def main():
         mysql_default_charset="utf8mb4",
         mysql_collate="utf8mb4_uca1400_ai_ci"
     )
+
+    matches = Table("matches", metadata,
+                    Column("id", Integer, primary_key=True, autoincrement=True, nullable=False),
+                    Column("PlayerA_Id", Integer, nullable=False),
+                    Column("PlayerB_Id", Integer, nullable=False),
+                    mysql_engine="InnoDB",
+                    mysql_auto_increment=5790,
+                    mysql_default_charset="utf8mb4",
+                    mysql_collate="utf8mb4_uca1400_ai_ci"
+                    )
     #########################  NEW  ##################################
 
     minimum_score = input("Enter the lowest winner score: ")
@@ -324,61 +334,39 @@ def main():
                       row[c.losername], ",",
                       row[c.loserscore])
 
-
-
-            '''
-                print(
-                    f"{row.gameid}, {row.tourneyid}, {row.winnerSysId}, "
-                    f"{row.loserSysId}, {row.winnerscore}, {row.loserscore}"
-                )
-                pa = row.winnerSysId
-                pb = row.loserSysId
-                
-            ans = input("Want a rematch")
-            if ans == "Y":
-                statement = text("Insert into matches (PlayerA_Id, PlayerB_Id) values (:playerA, :playerB)")
-                result = connection.execute(statement, {"playerA": pa, "playerB": pb})
-                connection.commit()
-                print(result)
-                
-                 pa = 10
-            pb = 33
-
             #########################  NEW  ##################################
-            # STEP NEW.4
-            # Instead of using 
-            # statement = text("Insert into matches (PlayerA_Id, PlayerB_Id) values (:playerA, :playerB)")
+            # STEP NEW.7
+            # Use the above query and ask the user if we want to schedule a new match by inserting
+            # the two players into a new match record.
+            # Before this is done, notice that a Match Table definition has also been created below Scrabble_Games_Initial
+            # https://docs.sqlalchemy.org/en/21/tutorial/data_insert.html#tutorial-core-insert
+            #
 
-            stmt = select(
-                scrabble_games_initial.c.gameid,
-                scrabble_games_initial.c.winnerscore,
-                scrabble_games_initial.c.loserscore,
-            )
+            stmt = select(c.gameid,
+                          c.winnername,c.winnerSysId,
+                          c.winnerscore,
+                          c.losername,c.loserSysId,
+                          c.loserscore).where(c.winnerscore < minimum_score).order_by(
+                c.winnerscore.desc()).order_by(c.winnername).limit(5)
 
-            print(stmt)
-            result = connection.execute(stmt, {"playerA": pa, "playerB": pb})
-            connection.commit()
-            
-            statement: TextClause = text(
-                "SELECT gameid, tourneyid, winnerSysId, loserSysId, winnerscore, loserscore, "
-                " p1.FullName as WinnerName, p2.FullName as LoserName "
-                "FROM scrabble_games_initial sgi Join Person p1 on sgi.winnerSysId = p.id "
-                "Join Person p2 on sgi.loserSysId on sqi.loserSysId = p2.id "
-                "WHERE winnerscore >= :winnerscore"
-            )
+            results = connection.execute(stmt)
+            print("Ask if there needs to be a rematch")
+            for row in results.mappings():
+                print(row[c.gameid], ",",
+                      row[c.winnername], ",",
+                      row[c.winnerscore], ",",
+                      row[c.losername], ",",
+                      row[c.loserscore])
 
-            print(statement)
+                ans = input("Want a rematch")
+                if ans == "Y":
+                    statement = insert(matches).values(PlayerA_Id=row[c.winnerSysId], PlayerB_Id=row[c.loserSysId])
+                    #statement = text("Insert into matches (PlayerA_Id, PlayerB_Id) values (:playerA, :playerB)")
+                    result = connection.execute(statement)
+                    connection.commit()
+                    print(result)
 
-            # The second argument supplies the placeholder values as a dictionary.
-            result = connection.execute(statement, {"winnerscore": minimum_score})
 
-            # Each row lets you read columns by name.
-            for row in result:
-                print(
-                    f"{row.gameid}, {row.tourneyid}, {row.winnerSysId}, "
-                    f"{row.loserSysId}, {row.winnerscore}, {row.loserscore}"
-                )
-            '''
 
 
     except OperationalError as e:
